@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.mingo.constants.AppConstants;
 import com.mingo.pojo.UnlockAccount;
 import com.mingo.services.UserServices;
 
@@ -18,28 +19,28 @@ public class UnlockAccountController {
     @Autowired
     private UserServices userServices;
 
-    @ModelAttribute("userAcc")
+    @ModelAttribute(AppConstants.USER_ACCOUNT)
     private UnlockAccount loadModelObject() {
         return new UnlockAccount();
     }
 
     @GetMapping("/loadUnlockAccountForm")
-    public String loadUnlockAccountPage(@RequestParam("email") String email, Model model) {
+    public String loadUnlockAccountPage(@RequestParam(AppConstants.EMAIL_PARAMETER) String email, Model model) {
         UnlockAccount unlockAccount = new UnlockAccount();
         unlockAccount.setEmail(email);
-        model.addAttribute("userAcc", unlockAccount);
+        model.addAttribute(AppConstants.USER_ACCOUNT, unlockAccount);
         return "unlockPage"; // Ensure a corresponding template is available at "unlockPage"
     }
 
     @PostMapping("/handleUnlockAccount")
-    public String handleUnlockAccountBtn(@ModelAttribute("userAcc") UnlockAccount unlockAccount, RedirectAttributes redirectAttributes) {
+    public String handleUnlockAccountBtn(@ModelAttribute(AppConstants.USER_ACCOUNT) UnlockAccount unlockAccount, RedirectAttributes redirectAttributes) {
         if (userServices.isTempPwdValid(unlockAccount.getEmail(), unlockAccount.getTempPassword())) {
             if (userServices.unlockAccount(unlockAccount.getEmail(), unlockAccount.getNewPassword())) {
-                redirectAttributes.addFlashAttribute("SuccessMsg", "Password changed successfully. <a href=\"index\">Login here</a>");
-                return "redirect:/loadUnlockAccountForm?email=" + unlockAccount.getEmail(); // Redirect to a valid page such as login
+                redirectAttributes.addFlashAttribute(AppConstants.SUCCESS_MESSAGE, AppConstants.UNLOCK_ACC_CTR_SUCCESS_RESPONSE);
+                return AppConstants.REDIRECT_TO_UNLOCK_ACC_WITH_EMAIL + unlockAccount.getEmail(); // Redirect to a valid page such as login
             }
         }
-        redirectAttributes.addFlashAttribute("FailedMsg", "Invalid temporary password or failed to unlock account");
-        return "redirect:/loadUnlockAccountForm?email=" + unlockAccount.getEmail();
+        redirectAttributes.addFlashAttribute(AppConstants.FAILED_MESSAGE, AppConstants.UNLOCK_ACC_CTR_FAILED_RESPONSE);
+        return AppConstants.REDIRECT_TO_UNLOCK_ACC_WITH_EMAIL + unlockAccount.getEmail();
     }
 }

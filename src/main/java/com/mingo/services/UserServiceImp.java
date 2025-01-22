@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import com.mingo.constants.AppConstants;
 import com.mingo.entiry.CitiesMaster;
 import com.mingo.entiry.CountryMaster;
 import com.mingo.entiry.StateMaster;
@@ -72,18 +73,18 @@ public class UserServiceImp implements UserServices {
 	@Override
 	public String generateTempPazzword() {
 		// TODO Auto-generated method stub
-		return "temporaryPassword";
+		return AppConstants.TEMPORARY_PASSWORD;
 	}
 
 	@Override
 	public boolean saveUserAccount(User user) {
-		user.setAccStatus("LOCKED");
+		user.setAccStatus(AppConstants.NEW_ACC_STATUS);
 		user.setUserPassword(generateTempPazzword());
 		UserDetails userEntity = new UserDetails();
 		BeanUtils.copyProperties(user, userEntity);
 		UserDetails savedEntity = userRepository.save(userEntity);
 		if(savedEntity.getUserId() != null) {
-			sendRegSuccMsg(user.getUserEmail(), "Verification Link", getSuccRegMsg(user));
+			sendRegSuccMsg(user.getUserEmail(), AppConstants.EMAIL_TITLE_FOR_VERIFICATION_EMAIL, getSuccRegMsg(user));
 			return true;
 		}
 		
@@ -94,13 +95,13 @@ public class UserServiceImp implements UserServices {
 	@Override
 	public String getSuccRegMsg(User user) {
 		try {
-			String fileName = "templates/UNLOCK_ACCOUNT_EMAIL_TEMPLATE.txt";
+			String fileName = AppConstants.VERIFICATION_EMAIL_TEMPLATE_TXT;
 			ClassPathResource resources = new ClassPathResource(fileName);
 			String body = new String(Files.readAllBytes(Paths.get(resources.getURI())), StandardCharsets.UTF_8);
-			body = body.replace("{{TEMP_PASSWORD}}", user.getUserPassword())
-                    .replace("{{RESET_LINK}}", "http://localhost:8081/loadUnlockAccountForm?email="+user.getUserEmail())
-                    .replace("{{USER_FIRST_NAME}}", user.getFirstName())
-                    .replace("{{USER_LAST_NAME}}", user.getLastName());
+			body = body.replace(AppConstants.TEMPORARY_PASSWORD, user.getUserPassword())
+                    .replace(AppConstants.VERIFICATION_EMAIL_TEMPLATE_RESET_LINK, AppConstants.VERIFICATION_EMAIL_TEMPLATE_RESET_LINK_VALUE_WITH_EMAIL+user.getUserEmail())
+                    .replace(AppConstants.VERIFICATION_EMAIL_TEMPLATE_USER_FIRST_NAME, user.getFirstName())
+                    .replace(AppConstants.VERIFICATION_EMAIL_TEMPLATE_USER_LAST_NAME, user.getLastName());
 			return body;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -123,7 +124,7 @@ public class UserServiceImp implements UserServices {
 	public boolean unlockAccount(String email, String password) {
 		UserDetails user=userRepository.findByUserEmail(email);
 		if(user!=null){
-			user.setAccStatus("UNLOCKED");
+			user.setAccStatus(AppConstants.AFTER_VERIFICATION_ACC_STATUS);
 			user.setUserPassword(password);
 			userRepository.save(user);
 			return true;
@@ -135,11 +136,11 @@ public class UserServiceImp implements UserServices {
 	public String loginCheck(String email, String password) {
 		UserDetails entity=userRepository.findByUserEmailAndUserPassword(email, password);
 		if(entity==null) {
-			return "invalid credential";
-		}else if(entity.getAccStatus().equals("LOCKED")) {
+			return AppConstants.LOGIN_CHECK_FAILED_MSG;
+		}else if(entity.getAccStatus().equals(AppConstants.NEW_ACC_STATUS)) {
 			return "your Account it locked unlocked it from<a href=\"http://localhost:8081/loadUnlockAccountForm?email=\""+entity.getUserEmail()+"here</a>";
 		}
-		return "VALID";
+		return AppConstants.VALID;
 	}
 
 	@Override
@@ -149,23 +150,23 @@ public class UserServiceImp implements UserServices {
 			User user=new User();
 			BeanUtils.copyProperties(entity, user);
 			String emailBody=getRecoveryEmailPasswordBody(user);
-			String subject="Recover Password";
+			String subject=AppConstants.EMAIL_TITLE_FOR_FORGOT_PAZZWORD;
 			sendPasswordToEmail(user.getUserEmail(), subject, emailBody);
-			return "SUCCESS";
+			return AppConstants.SUCCESS;
 		}
-		return "FAILED";
+		return AppConstants.FAILED;
 	}
 
 	@Override
 	public String getRecoveryEmailPasswordBody(User user) {
 		try {
-			String fileName = "templates/RECOVER_PASSWORD_EMAIL_TEMPLATE.txt";
+			String fileName = AppConstants.RECOVERY_EMAIL_TEMPLATE_TXT;
 			ClassPathResource resources = new ClassPathResource(fileName);
 			String body = new String(Files.readAllBytes(Paths.get(resources.getURI())), StandardCharsets.UTF_8);
-			body = body.replace("{{TEMP_PASSWORD}}", user.getUserPassword())
-                    .replace("{{RESET_LINK}}", "http://localhost:8081/loadUnlockAccountForm?email="+user.getUserEmail())
-                    .replace("{{USER_FIRST_NAME}}", user.getFirstName())
-                    .replace("{{USER_LAST_NAME}}", user.getLastName());
+			body = body.replace(AppConstants.TEMPORARY_PASSWORD, user.getUserPassword())
+                    .replace(AppConstants.VERIFICATION_EMAIL_TEMPLATE_RESET_LINK, AppConstants.VERIFICATION_EMAIL_TEMPLATE_RESET_LINK_VALUE_WITH_EMAIL+user.getUserEmail())
+                    .replace(AppConstants.VERIFICATION_EMAIL_TEMPLATE_USER_FIRST_NAME, user.getFirstName())
+                    .replace(AppConstants.VERIFICATION_EMAIL_TEMPLATE_USER_LAST_NAME, user.getLastName());
 			return body;
 		} catch (Exception e) {
 			e.printStackTrace();

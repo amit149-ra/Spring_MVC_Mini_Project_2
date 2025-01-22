@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import com.mingo.constants.AppConstants;
 import com.mingo.services.UserServices;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +20,7 @@ public class LoginControlller {
 	 */
 	@GetMapping(value= {"/","index"})
 	public String index() {
-		return "index";
+		return AppConstants.INDEX_VIEW;
 	}
 	/**
 	 * this mathod is use to handle login button request
@@ -31,14 +32,14 @@ public class LoginControlller {
 	@PostMapping("/signin")
 	public String handleSignInBtn(HttpServletRequest req,Model model) {
 		String viewName="";
-		String email=req.getParameter("email");
-		String password=req.getParameter("pwd");
+		String email=req.getParameter(AppConstants.EMAIL_PARAMETER);
+		String password=req.getParameter(AppConstants.PWD_PARAMETER);
 		String status=services.loginCheck(email, password);
-		if(status.equals("VALID")) {
-			viewName="dashboard";
+		if(status.equals(AppConstants.VALID)) {
+			viewName=AppConstants.DASHBOARD_VIEW;
 		}else {
-			viewName="index";
-			model.addAttribute("msg", status);
+			viewName=AppConstants.INDEX_VIEW;
+			model.addAttribute(AppConstants.LOGIN_CTR_MSG_RESPONSE, status);
 		}
 		return viewName;
 	}
